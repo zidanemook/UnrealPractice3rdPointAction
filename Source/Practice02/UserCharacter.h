@@ -32,6 +32,18 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 		float BaseLookUpRate;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
+		bool	JogPressed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
+		bool	CrouchPressed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
+		bool	PronePressed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
+		bool	JumpPressed;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -47,6 +59,20 @@ public:
 
 	/** Called for side to side input */
 	void MoveRight(float Value);
+
+	void Interact();
+
+	void Jog();
+
+	void StopJog();
+
+	void Crouch();
+
+	void Prone();
+
+	void Jump();
+
+	void StopJumping();
 
 	///**
 	//* Called via input to turn at a given rate.

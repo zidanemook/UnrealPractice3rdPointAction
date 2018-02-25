@@ -44,6 +44,12 @@ AUserCharacter::AUserCharacter()
 
 												   // Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 												   // are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+
+	// Init AniVariables
+	JogPressed = false;
+	CrouchPressed = false;
+	PronePressed = false;
+	JumpPressed = false;
 }
 
 // Called when the game starts or when spawned
@@ -67,19 +73,29 @@ void AUserCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	// Set up gameplay key bindings
 	check(PlayerInputComponent);
-	//PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	//PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
-	//PlayerInputComponent->BindAxis("MoveForward", this, &AUserCharacter::MoveForward);
-	//PlayerInputComponent->BindAxis("MoveRight", this, &AUserCharacter::MoveRight);
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AUserCharacter::Interact);
 
-	//// We have 2 versions of the rotation bindings to handle different kinds of devices differently
-	//// "turn" handles devices that provide an absolute delta, such as a mouse.
-	//// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	//PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	////PlayerInputComponent->BindAxis("TurnRate", this, &AUserCharacter::TurnAtRate);
-	//PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	////PlayerInputComponent->BindAxis("LookUpRate", this, &AUserCharacter::LookUpAtRate);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AUserCharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AUserCharacter::StopJumping);
+
+	PlayerInputComponent->BindAction("Jog", IE_Pressed, this, &AUserCharacter::Jog);
+	PlayerInputComponent->BindAction("Jog", IE_Released, this, &AUserCharacter::StopJog);
+
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AUserCharacter::Crouch);
+
+	//PlayerInputComponent->BindAction("Prone", IE_Pressed, this, &AUserCharacter::Prone);
+
+	PlayerInputComponent->BindAxis("MoveForward", this, &AUserCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &AUserCharacter::MoveRight);
+
+	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
+	// "turn" handles devices that provide an absolute delta, such as a mouse.
+	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
+	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	//PlayerInputComponent->BindAxis("TurnRate", this, &AUserCharacter::TurnAtRate);
+	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	//PlayerInputComponent->BindAxis("LookUpRate", this, &AUserCharacter::LookUpAtRate);
 }
 
 //void AUserCharacter::TurnAtRate(float Rate)
@@ -121,4 +137,75 @@ void AUserCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
 	}
+}
+
+void AUserCharacter::Interact()
+{
+
+
+}
+
+void AUserCharacter::Jog()
+{
+	JogPressed = true;
+	GetCharacterMovement()->MaxWalkSpeed = 375;
+}
+
+void AUserCharacter::StopJog()
+{
+	JogPressed = false;
+
+	if (true == CrouchPressed)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 160;
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 200;
+	}
+}
+
+void AUserCharacter::Crouch()
+{
+	CrouchPressed = !CrouchPressed;
+
+	if (true == CrouchPressed)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 160;
+	}
+	else
+	{
+		if (true == JogPressed)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = 375;
+		}
+		else
+		{
+			GetCharacterMovement()->MaxWalkSpeed = 200;
+		}
+	}
+}
+
+void AUserCharacter::Prone()
+{
+	PronePressed = !PronePressed;
+}
+
+void AUserCharacter::Jump()
+{
+	ACharacter::Jump();
+
+	if (false == CrouchPressed)
+	{
+		JumpPressed = true;
+	}
+		
+
+
+}
+void AUserCharacter::StopJumping()
+{
+	ACharacter::StopJumping();
+
+	JumpPressed = false;
 }
