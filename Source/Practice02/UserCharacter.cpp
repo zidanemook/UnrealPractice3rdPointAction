@@ -45,11 +45,15 @@ AUserCharacter::AUserCharacter()
 												   // Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 												   // are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 
+	GetCharacterMovement()->MaxWalkSpeed = 200;
+
 	// Init AniVariables
 	JogPressed = false;
 	CrouchPressed = false;
 	PronePressed = false;
 	JumpPressed = false;
+	EquipWeapon = false;
+	bUseControllerRotationYaw = false;
 }
 
 // Called when the game starts or when spawned
@@ -84,11 +88,13 @@ void AUserCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AUserCharacter::Crouch);
 
-	//PlayerInputComponent->BindAction("Prone", IE_Pressed, this, &AUserCharacter::Prone);
+	PlayerInputComponent->BindAction("SwitchTool", IE_Pressed, this, &AUserCharacter::SwitchTool);
+
+	PlayerInputComponent->BindAction("Prone", IE_Pressed, this, &AUserCharacter::Prone);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AUserCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AUserCharacter::MoveRight);
-
+	
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
@@ -141,8 +147,6 @@ void AUserCharacter::MoveRight(float Value)
 
 void AUserCharacter::Interact()
 {
-
-
 }
 
 void AUserCharacter::Jog()
@@ -167,6 +171,7 @@ void AUserCharacter::StopJog()
 
 void AUserCharacter::Crouch()
 {
+	ACharacter::Crouch();
 	CrouchPressed = !CrouchPressed;
 
 	if (true == CrouchPressed)
@@ -208,4 +213,16 @@ void AUserCharacter::StopJumping()
 	ACharacter::StopJumping();
 
 	JumpPressed = false;
+}
+
+void AUserCharacter::SwitchTool()
+{
+	EquipWeapon = !EquipWeapon;
+
+	UE_LOG(LogTemp, Warning, TEXT("EquipWeapon is %d"), EquipWeapon);
+
+	if (EquipWeapon)
+		bUseControllerRotationYaw = true;
+	else
+		bUseControllerRotationYaw = false;
 }

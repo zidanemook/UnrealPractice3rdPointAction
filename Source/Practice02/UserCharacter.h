@@ -44,6 +44,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
 		bool	JumpPressed;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
+		bool	EquipWeapon;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -73,6 +76,8 @@ public:
 	void Jump();
 
 	void StopJumping();
+
+	void SwitchTool();
 
 	///**
 	//* Called via input to turn at a given rate.
