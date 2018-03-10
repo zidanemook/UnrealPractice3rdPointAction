@@ -28,7 +28,7 @@ AUserCharacter::AUserCharacter()
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
-	GetCharacterMovement()->JumpZVelocity = 600.f;
+	GetCharacterMovement()->JumpZVelocity = 400.f;
 	GetCharacterMovement()->AirControl = 0.2f;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
@@ -42,8 +42,8 @@ AUserCharacter::AUserCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-												   // Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
-												   // are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
+	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 
 	GetCharacterMovement()->MaxWalkSpeed = 200;
 
@@ -51,9 +51,11 @@ AUserCharacter::AUserCharacter()
 	JogPressed = false;
 	CrouchPressed = false;
 	PronePressed = false;
+	DisableMovement = false;
 	JumpPressed = false;
-	EquipWeapon = false;
+	EquipTool = false;
 	bUseControllerRotationYaw = false;
+	eEquipmentType = Equipment_Type::None;
 }
 
 // Called when the game starts or when spawned
@@ -86,11 +88,14 @@ void AUserCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Jog", IE_Pressed, this, &AUserCharacter::Jog);
 	PlayerInputComponent->BindAction("Jog", IE_Released, this, &AUserCharacter::StopJog);
 
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AUserCharacter::Crouch);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AUserCharacter::Crouching);
 
 	PlayerInputComponent->BindAction("SwitchTool", IE_Pressed, this, &AUserCharacter::SwitchTool);
 
 	PlayerInputComponent->BindAction("Prone", IE_Pressed, this, &AUserCharacter::Prone);
+
+	PlayerInputComponent->BindAction("LeftMouseButton", IE_Pressed, this, &AUserCharacter::LeftMouseButtonPressed);
+	PlayerInputComponent->BindAction("LeftMouseButton", IE_Released, this, &AUserCharacter::LeftMouseButtonReleased);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AUserCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AUserCharacter::MoveRight);
@@ -118,7 +123,7 @@ void AUserCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 void AUserCharacter::MoveForward(float Value)
 {
-	if ((Controller != NULL) && (Value != 0.0f))
+	if ((Controller != NULL) && (Value != 0.0f) && (false == PronePressed) && (false == DisableMovement))
 	{
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -126,13 +131,16 @@ void AUserCharacter::MoveForward(float Value)
 
 		// get forward vector
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+		if (EquipTool && (Value < 0))
+			Value *= 0.7f;
 		AddMovementInput(Direction, Value);
 	}
 }
 
 void AUserCharacter::MoveRight(float Value)
 {
-	if ((Controller != NULL) && (Value != 0.0f))
+	if ((Controller != NULL) && (Value != 0.0f) && (false == PronePressed) && (false == DisableMovement))
 	{
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -169,7 +177,7 @@ void AUserCharacter::StopJog()
 	}
 }
 
-void AUserCharacter::Crouch()
+void AUserCharacter::Crouching()
 {
 	ACharacter::Crouch();
 	CrouchPressed = !CrouchPressed;
@@ -200,13 +208,10 @@ void AUserCharacter::Jump()
 {
 	ACharacter::Jump();
 
-	if (false == CrouchPressed)
+	if ((false == CrouchPressed) && (false == DisableMovement))
 	{
 		JumpPressed = true;
 	}
-		
-
-
 }
 void AUserCharacter::StopJumping()
 {
@@ -217,12 +222,27 @@ void AUserCharacter::StopJumping()
 
 void AUserCharacter::SwitchTool()
 {
-	EquipWeapon = !EquipWeapon;
+	if (false == DisableMovement)
+	{
+		EquipTool = !EquipTool;
 
-	UE_LOG(LogTemp, Warning, TEXT("EquipWeapon is %d"), EquipWeapon);
+		UE_LOG(LogTemp, Warning, TEXT("EquipTool is %d"), EquipTool);
 
-	if (EquipWeapon)
-		bUseControllerRotationYaw = true;
-	else
-		bUseControllerRotationYaw = false;
+		if (EquipTool)
+			bUseControllerRotationYaw = true;
+		else
+			bUseControllerRotationYaw = false;
+	}
 }
+
+void AUserCharacter::LeftMouseButtonPressed()
+{
+	DisableMovement = true;
+}
+
+void AUserCharacter::LeftMouseButtonReleased()
+{
+	DisableMovement = false;
+}
+
+//총이냐 근접무기냐 활이냐 정보를 애니메이션에 전달 어떻게?

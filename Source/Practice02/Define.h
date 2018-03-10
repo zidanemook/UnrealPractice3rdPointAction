@@ -3,10 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/ObjectMacros.h"
 
-enum Motion_State
+UENUM()
+enum class Motion_State : uint8
 {
-	Stand_Idle = 0,
+	Stand_Idle,
 	Stand_Walk,
 	Stand_Run,
 	Stand_Jump,
@@ -16,3 +18,12 @@ enum Motion_State
 	Crouch_Jump,
 };
 
+
+UENUM()
+enum class Equipment_Type : uint8
+{
+	None,
+	Weapon_Sword,
+	Weapon_Bow,
+	Weapon_Rifle
+};

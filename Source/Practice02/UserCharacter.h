@@ -3,6 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "./Define.h"
+
 #include "GameFramework/Character.h"
 #include "UserCharacter.generated.h"
 
@@ -42,10 +45,17 @@ protected:
 		bool	PronePressed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
+		bool	DisableMovement;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
 		bool	JumpPressed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
-		bool	EquipWeapon;
+		bool	EquipTool;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
+		Equipment_Type eEquipmentType;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -69,7 +79,7 @@ public:
 
 	void StopJog();
 
-	void Crouch();
+	void Crouching();
 
 	void Prone();
 
@@ -78,6 +88,9 @@ public:
 	void StopJumping();
 
 	void SwitchTool();
+
+	void LeftMouseButtonPressed();
+	void LeftMouseButtonReleased();
 
 	///**
 	//* Called via input to turn at a given rate.
