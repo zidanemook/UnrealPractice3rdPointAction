@@ -8,6 +8,7 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 
+
 // Sets default values
 AUserCharacter::AUserCharacter()
 {
@@ -55,7 +56,7 @@ AUserCharacter::AUserCharacter()
 	JumpPressed = false;
 	EquipTool = false;
 	bUseControllerRotationYaw = false;
-	eEquipmentType = Equipment_Type::None;
+	eEquipmentType = Equipment_Type::Equip_None;
 }
 
 // Called when the game starts or when spawned
@@ -96,6 +97,17 @@ void AUserCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("LeftMouseButton", IE_Pressed, this, &AUserCharacter::LeftMouseButtonPressed);
 	PlayerInputComponent->BindAction("LeftMouseButton", IE_Released, this, &AUserCharacter::LeftMouseButtonReleased);
+
+	//PlayerInputComponent->BindAction("0", IE_Pressed, this, &AUserCharacter::NumKeyZero);
+	//PlayerInputComponent->BindAction("1", IE_Pressed, this, &AUserCharacter::NumKeyOne);
+	//PlayerInputComponent->BindAction("2", IE_Pressed, this, &AUserCharacter::NumKeyTwo);
+	//PlayerInputComponent->BindAction("3", IE_Pressed, this, &AUserCharacter::NumKeyThree);
+	//PlayerInputComponent->BindAction("4", IE_Pressed, this, &AUserCharacter::NumKeyFour);
+	//PlayerInputComponent->BindAction("5", IE_Pressed, this, &AUserCharacter::NumKeyFive);
+	//PlayerInputComponent->BindAction("6", IE_Pressed, this, &AUserCharacter::NumKeySix);
+	//PlayerInputComponent->BindAction("7", IE_Pressed, this, &AUserCharacter::NumKeySeven);
+	//PlayerInputComponent->BindAction("8", IE_Pressed, this, &AUserCharacter::NumKeyEight);
+	//PlayerInputComponent->BindAction("9", IE_Pressed, this, &AUserCharacter::NumKeyNine);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AUserCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AUserCharacter::MoveRight);
@@ -222,16 +234,28 @@ void AUserCharacter::StopJumping()
 
 void AUserCharacter::SwitchTool()
 {
-	if (false == DisableMovement)
+	uint8 iType = (uint8)eEquipmentType;
+	iType += 1;
+	eEquipmentType = (Equipment_Type)iType;
+	if (iType >= (uint8)Equipment_Type::Equip_Max)
+		eEquipmentType = Equipment_Type::Equip_None;
+
+	if (eEquipmentType == Equipment_Type::Equip_None)
 	{
-		EquipTool = !EquipTool;
+		EquipTool = false;
+		bUseControllerRotationYaw = false;
+	}
+	else
+	{
+		bUseControllerRotationYaw = true;
+		EquipTool = true;	
+	}
 
-		UE_LOG(LogTemp, Warning, TEXT("EquipTool is %d"), EquipTool);
-
-		if (EquipTool)
-			bUseControllerRotationYaw = true;
-		else
-			bUseControllerRotationYaw = false;
+	const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("Equipment_Type"), true);
+	if (EnumPtr)
+	{
+		FString text = (EnumPtr->GetNameByValue((int64)eEquipmentType)).ToString();
+		UE_LOG(LogTemp, Warning, TEXT("EquipTool is %s"), *text);
 	}
 }
 

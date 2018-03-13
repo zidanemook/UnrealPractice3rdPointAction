@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 
-UENUM()
+UENUM(BlueprintType)
 enum class Motion_State : uint8
 {
 	Stand_Idle,
@@ -19,11 +19,16 @@ enum class Motion_State : uint8
 };
 
 
-UENUM()
+UENUM(BlueprintType)
 enum class Equipment_Type : uint8
 {
-	None,
-	Weapon_Sword,
-	Weapon_Bow,
-	Weapon_Rifle
+	Equip_None		UMETA(DisplayName = "Equip_None"),
+	Equip_Sword		UMETA(DisplayName = "Equip_Sword"),
+	Equip_Bow		UMETA(DisplayName = "Equip_Bow"),
+	Equip_Pistol	UMETA(DisplayName = "Equip_Pistol"),
+	Equip_Rifle		UMETA(DisplayName = "Equip_Rifle"),
+	Equip_Axe		UMETA(DisplayName = "Equip_Axe"),
+	Equip_Shovel	UMETA(DisplayName = "Equip_Shovel"),
+	Equip_Pickaxe	UMETA(DisplayName = "Equip_Pickaxe"),
+	Equip_Max
 };
