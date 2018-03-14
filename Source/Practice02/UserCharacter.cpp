@@ -54,7 +54,7 @@ AUserCharacter::AUserCharacter()
 	PronePressed = false;
 	DisableMovement = false;
 	JumpPressed = false;
-	EquipTool = false;
+	IsAiming = false;
 	bUseControllerRotationYaw = false;
 	eEquipmentType = Equipment_Type::Equip_None;
 }
@@ -97,6 +97,9 @@ void AUserCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("LeftMouseButton", IE_Pressed, this, &AUserCharacter::LeftMouseButtonPressed);
 	PlayerInputComponent->BindAction("LeftMouseButton", IE_Released, this, &AUserCharacter::LeftMouseButtonReleased);
+
+	PlayerInputComponent->BindAction("RightMouseButton", IE_Pressed, this, &AUserCharacter::RightMouseButtonPressed);
+	PlayerInputComponent->BindAction("RightMouseButton", IE_Released, this, &AUserCharacter::RightMouseButtonReleased);
 
 	//PlayerInputComponent->BindAction("0", IE_Pressed, this, &AUserCharacter::NumKeyZero);
 	//PlayerInputComponent->BindAction("1", IE_Pressed, this, &AUserCharacter::NumKeyOne);
@@ -144,7 +147,7 @@ void AUserCharacter::MoveForward(float Value)
 		// get forward vector
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-		if (EquipTool && (Value < 0))
+		if (IsAiming && (Value < 0))
 			Value *= 0.7f;
 		AddMovementInput(Direction, Value);
 	}
@@ -240,7 +243,7 @@ void AUserCharacter::SwitchTool()
 	if (iType >= (uint8)Equipment_Type::Equip_Max)
 		eEquipmentType = Equipment_Type::Equip_None;
 
-	if (eEquipmentType == Equipment_Type::Equip_None)
+	/*if (eEquipmentType == Equipment_Type::Equip_None)
 	{
 		EquipTool = false;
 		bUseControllerRotationYaw = false;
@@ -249,7 +252,7 @@ void AUserCharacter::SwitchTool()
 	{
 		bUseControllerRotationYaw = true;
 		EquipTool = true;	
-	}
+	}*/
 
 	const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("Equipment_Type"), true);
 	if (EnumPtr)
@@ -269,4 +272,14 @@ void AUserCharacter::LeftMouseButtonReleased()
 	DisableMovement = false;
 }
 
-//총이냐 근접무기냐 활이냐 정보를 애니메이션에 전달 어떻게?
+void AUserCharacter::RightMouseButtonPressed()
+{
+	IsAiming = true;
+	bUseControllerRotationYaw = true;
+}
+
+void AUserCharacter::RightMouseButtonReleased()
+{
+	IsAiming = false;
+	bUseControllerRotationYaw = false;
+}

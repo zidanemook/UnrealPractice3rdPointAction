@@ -51,7 +51,7 @@ protected:
 		bool	JumpPressed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
-		bool	EquipTool;
+		bool	IsAiming;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
 		Equipment_Type eEquipmentType;
@@ -91,6 +91,10 @@ public:
 
 	void LeftMouseButtonPressed();
 	void LeftMouseButtonReleased();
+
+	void RightMouseButtonPressed();
+	void RightMouseButtonReleased();
+
 
 	//void NumKeyZero();
 	//void NumKeyOne();
