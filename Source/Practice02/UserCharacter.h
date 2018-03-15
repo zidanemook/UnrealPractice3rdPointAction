@@ -54,6 +54,12 @@ protected:
 		bool	IsAiming;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
+		bool	Slash;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
+		bool	IsGun;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AniVariable, meta = (AllowPrivateAccess = "true"))
 		Equipment_Type eEquipmentType;
 
 

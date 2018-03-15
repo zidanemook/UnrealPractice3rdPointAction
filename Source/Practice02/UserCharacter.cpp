@@ -55,6 +55,8 @@ AUserCharacter::AUserCharacter()
 	DisableMovement = false;
 	JumpPressed = false;
 	IsAiming = false;
+	Slash = false;
+	IsGun = false;
 	bUseControllerRotationYaw = false;
 	eEquipmentType = Equipment_Type::Equip_None;
 }
@@ -243,6 +245,11 @@ void AUserCharacter::SwitchTool()
 	if (iType >= (uint8)Equipment_Type::Equip_Max)
 		eEquipmentType = Equipment_Type::Equip_None;
 
+	if (iType >= (uint8)Equipment_Type::Equip_Pistol)
+		IsGun = true;
+	else
+		IsGun = false;
+
 	/*if (eEquipmentType == Equipment_Type::Equip_None)
 	{
 		EquipTool = false;
@@ -264,17 +271,18 @@ void AUserCharacter::SwitchTool()
 
 void AUserCharacter::LeftMouseButtonPressed()
 {
-	DisableMovement = true;
+	Slash = true;
 }
 
 void AUserCharacter::LeftMouseButtonReleased()
 {
-	DisableMovement = false;
+	Slash = false;
 }
 
 void AUserCharacter::RightMouseButtonPressed()
 {
-	IsAiming = true;
+	if( IsGun )
+		IsAiming = true;
 	bUseControllerRotationYaw = true;
 }
 
