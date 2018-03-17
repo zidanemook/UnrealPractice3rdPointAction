@@ -55,8 +55,9 @@ AUserCharacter::AUserCharacter()
 	DisableMovement = false;
 	JumpPressed = false;
 	IsAiming = false;
-	Slash = false;
+	DoAttack = false;
 	IsGun = false;
+	IsBow = false;
 	bUseControllerRotationYaw = false;
 	eEquipmentType = Equipment_Type::Equip_None;
 }
@@ -250,6 +251,11 @@ void AUserCharacter::SwitchTool()
 	else
 		IsGun = false;
 
+	if (iType >= (uint8)Equipment_Type::Equip_Bow)
+		IsBow = true;
+	else
+		IsBow = false;
+
 	/*if (eEquipmentType == Equipment_Type::Equip_None)
 	{
 		EquipTool = false;
@@ -271,17 +277,17 @@ void AUserCharacter::SwitchTool()
 
 void AUserCharacter::LeftMouseButtonPressed()
 {
-	Slash = true;
+	DoAttack = true;
 }
 
 void AUserCharacter::LeftMouseButtonReleased()
 {
-	Slash = false;
+	DoAttack = false;
 }
 
 void AUserCharacter::RightMouseButtonPressed()
 {
-	if( IsGun )
+	if( IsGun || IsBow )
 		IsAiming = true;
 	bUseControllerRotationYaw = true;
 }
