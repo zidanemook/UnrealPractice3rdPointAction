@@ -246,12 +246,12 @@ void AUserCharacter::SwitchTool()
 	if (iType >= (uint8)Equipment_Type::Equip_Max)
 		eEquipmentType = Equipment_Type::Equip_None;
 
-	if (iType >= (uint8)Equipment_Type::Equip_Pistol)
+	if (iType == (uint8)Equipment_Type::Equip_Rifle || iType == (uint8)Equipment_Type::Equip_Pistol)
 		IsGun = true;
 	else
 		IsGun = false;
 
-	if (iType >= (uint8)Equipment_Type::Equip_Bow)
+	if (iType == (uint8)Equipment_Type::Equip_Bow)
 		IsBow = true;
 	else
 		IsBow = false;
