@@ -224,10 +224,9 @@ void AUserCharacter::Prone()
 
 void AUserCharacter::Jump()
 {
-	ACharacter::Jump();
-
 	if ((false == CrouchPressed) && (false == DisableMovement))
 	{
+		ACharacter::Jump();
 		JumpPressed = true;
 	}
 }
