@@ -15,7 +15,6 @@ class PRACTICE02_API APractice02GameModeBase : public AGameModeBase
 	GENERATED_BODY()
 	
 public:
-	APractice02GameModeBase();
-	
+	APractice02GameModeBase();	
 	
 };

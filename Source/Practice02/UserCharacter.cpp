@@ -10,7 +10,8 @@
 
 
 // Sets default values
-AUserCharacter::AUserCharacter()
+AUserCharacter::AUserCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	//PrimaryActorTick.bCanEverTick = true;
@@ -60,13 +61,25 @@ AUserCharacter::AUserCharacter()
 	IsBow = false;
 	bUseControllerRotationYaw = false;
 	eEquipmentType = Equipment_Type::Equip_None;
+
+
+	CurrentWeapon = NULL;
+
+	Inventory.SetNum(3, false);
+
+	CollisionComp = ObjectInitializer.CreateDefaultSubobject<UBoxComponent>(this, "CollisionComp");
+	CollisionComp->SetupAttachment(GetRootComponent());
+	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AUserCharacter::OnCollision);
+
 }
+
+
 
 // Called when the game starts or when spawned
 void AUserCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	GiveDefaultWeapon();
 }
 
 // Called every frame
@@ -122,22 +135,13 @@ void AUserCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	//PlayerInputComponent->BindAxis("TurnRate", this, &AUserCharacter::TurnAtRate);
+	PlayerInputComponent->BindAxis("TurnRate", this, &AUserCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	//PlayerInputComponent->BindAxis("LookUpRate", this, &AUserCharacter::LookUpAtRate);
-}
+	PlayerInputComponent->BindAxis("LookUpRate", this, &AUserCharacter::LookUpAtRate);
 
-//void AUserCharacter::TurnAtRate(float Rate)
-//{
-//	// calculate delta for this frame from the rate information
-//	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
-//}
-//
-//void AUserCharacter::LookUpAtRate(float Rate)
-//{
-//	// calculate delta for this frame from the rate information
-//	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
-//}
+	// Handle touch devices
+	InputComponent->BindTouch(EInputEvent::IE_Pressed, this, &AUserCharacter::TouchStarted);
+}
 
 void AUserCharacter::MoveForward(float Value)
 {
@@ -169,6 +173,18 @@ void AUserCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
 	}
+}
+
+void AUserCharacter::TurnAtRate(float Rate)
+{
+	// calculate delta for this frame from the rate information
+	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+}
+
+void AUserCharacter::LookUpAtRate(float Rate)
+{
+	// calculate delta for this frame from the rate information
+	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
 void AUserCharacter::Interact()
@@ -239,6 +255,30 @@ void AUserCharacter::StopJumping()
 
 void AUserCharacter::SwitchTool()
 {
+	if (Inventory[CurrentWeapon->WeaponConfig.Priority]->WeaponConfig.Priority != 2)
+	{
+		if (Inventory[CurrentWeapon->WeaponConfig.Priority + 1] == NULL)
+		{
+			for (int32 i = CurrentWeapon->WeaponConfig.Priority + 1; i < Inventory.Num(); i++)
+			{
+				if (Inventory[i] && Inventory[i]->IsA(AWeapon::StaticClass()))
+				{
+					EquipWeapon(Inventory[i]);
+				}
+			}
+		}
+		else
+		{
+			EquipWeapon(Inventory[CurrentWeapon->WeaponConfig.Priority + 1]);
+		}
+	}
+	else
+	{
+		EquipWeapon(Inventory[CurrentWeapon->WeaponConfig.Priority]);
+	}
+
+
+
 	uint8 iType = (uint8)eEquipmentType;
 	iType += 1;
 	eEquipmentType = (Equipment_Type)iType;
@@ -255,16 +295,6 @@ void AUserCharacter::SwitchTool()
 	else
 		IsBow = false;
 
-	/*if (eEquipmentType == Equipment_Type::Equip_None)
-	{
-		EquipTool = false;
-		bUseControllerRotationYaw = false;
-	}
-	else
-	{
-		bUseControllerRotationYaw = true;
-		EquipTool = true;	
-	}*/
 
 	const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("Equipment_Type"), true);
 	if (EnumPtr)
@@ -277,6 +307,15 @@ void AUserCharacter::SwitchTool()
 void AUserCharacter::LeftMouseButtonPressed()
 {
 	DoAttack = true;
+
+	if (CurrentWeapon != NULL)
+	{
+		CurrentWeapon->Fire();
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, "No Weapon in Hand");
+	}
 }
 
 void AUserCharacter::LeftMouseButtonReleased()
@@ -295,4 +334,86 @@ void AUserCharacter::RightMouseButtonReleased()
 {
 	IsAiming = false;
 	bUseControllerRotationYaw = false;
+}
+
+void AUserCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
+{
+	// Jump, but only on the first touch
+	if (FingerIndex == ETouchIndex::Touch1)
+	{
+		Jump();
+	}
+}
+
+void AUserCharacter::OnCollision(UPrimitiveComponent *OverlappedComp, AActor *OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
+{
+	AWeapon *Weapon = Cast<AWeapon>(OtherActor);
+	if (Weapon)
+	{
+		ProcessWeaponPickup(Weapon);
+	}
+}
+
+void AUserCharacter::ProcessWeaponPickup(AWeapon *Weapon)
+{
+	if (Weapon != NULL)
+	{
+		if (Inventory[Weapon->WeaponConfig.Priority] == NULL)
+		{
+			AWeapon *Spawner = GetWorld()->SpawnActor<AWeapon>(Weapon->GetClass());
+			if (Spawner)
+			{
+				Inventory[Spawner->WeaponConfig.Priority] = Spawner;
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Black, "You Just picked up a " + Inventory[Spawner->WeaponConfig.Priority]->WeaponConfig.Name);
+			}
+			Weapon->Destroy();
+		}
+		else
+		{
+			if (Inventory[Weapon->WeaponConfig.Priority]->CurrentAmmo >= 0 && Weapon->CurrentAmmo <= (Inventory[Weapon->WeaponConfig.Priority]->WeaponConfig.MaxAmmo - Inventory[Weapon->WeaponConfig.Priority]->CurrentAmmo))
+			{
+				Inventory[Weapon->WeaponConfig.Priority]->CurrentAmmo += Weapon->CurrentAmmo;
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, "Added " + Weapon->CurrentAmmo);
+				Weapon->Destroy();
+			}
+			else
+			{
+				if (Inventory[Weapon->WeaponConfig.Priority]->CurrentAmmo > Inventory[Weapon->WeaponConfig.Priority]->WeaponConfig.MaxAmmo)
+				{
+					Inventory[Weapon->WeaponConfig.Priority]->CurrentAmmo = Inventory[Weapon->WeaponConfig.Priority]->WeaponConfig.MaxAmmo;
+				}
+			}
+		}
+	}
+}
+
+void AUserCharacter::EquipWeapon(AWeapon *Weapon)
+{
+	if (CurrentWeapon != NULL)
+	{
+		CurrentWeapon = Inventory[CurrentWeapon->WeaponConfig.Priority];
+		CurrentWeapon->OnUnEquip();
+		CurrentWeapon = Weapon;
+		Weapon->SetOwningPawn(this);
+		Weapon->OnEquip();
+	}
+	else
+	{
+		CurrentWeapon = Weapon;
+		CurrentWeapon = Inventory[CurrentWeapon->WeaponConfig.Priority];
+		CurrentWeapon->SetOwningPawn(this);
+		Weapon->OnEquip();
+	}
+}
+
+void AUserCharacter::GiveDefaultWeapon()
+{
+	AWeapon *Spawner = GetWorld()->SpawnActor<AWeapon>(WeaponSpawn);
+	if (Spawner)
+	{
+		Inventory[Spawner->WeaponConfig.Priority] = Spawner;
+		CurrentWeapon = Inventory[Spawner->WeaponConfig.Priority];
+		CurrentWeapon->SetOwningPawn(this);
+		CurrentWeapon->OnEquip();
+	}
 }

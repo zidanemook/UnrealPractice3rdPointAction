@@ -4,3 +4,4 @@
 
 #include "CoreMinimal.h"
 
+#define PROJECTILE_COLLISION ECC_GameTraceChannel2
