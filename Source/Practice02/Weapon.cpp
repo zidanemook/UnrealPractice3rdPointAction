@@ -13,7 +13,7 @@ AWeapon::AWeapon(const FObjectInitializer& ObjectInitializer)
 
 	WeaponMesh = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh"));
 	WeaponMesh->SetRelativeRotation(FRotator(0, 180, 0), false);
-	WeaponMesh->AttachTo(RootComponent);
+	WeaponMesh->SetupAttachment(RootComponent);
 	
 }
 
@@ -94,7 +94,7 @@ void AWeapon::AttachToPlayer()
 
 		USkeletalMeshComponent *Character = MyPawn->GetMesh();
 		WeaponMesh->SetHiddenInGame(false);
-		WeaponMesh->AttachTo(Character, "Weapon_Socket");
+		WeaponMesh->SetupAttachment(Character, "Weapon_Socket");
 	}
 }
 
