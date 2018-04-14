@@ -85,6 +85,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory)
 		TArray<class AWeapon*> Inventory;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widgets)
+		TSubclassOf<UUserWidget> wHUD;
+
+	// Variable to hold the widget After Creating it.
+	UUserWidget* m_HUD;
+
 protected:
 	// Called when the game starts or when spawned
 	UFUNCTION(BlueprintCallable, Category = Event)

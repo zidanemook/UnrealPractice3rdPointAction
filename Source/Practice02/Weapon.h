@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "./Define.h"
 #include "Rocket.h"
 #include "Enemy.h"
 #include "Weapon.generated.h"
@@ -97,6 +98,9 @@ class PRACTICE02_API AWeapon : public AActor
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Config)
 	int32 CurrentClip;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Config)
+	Equipment_Type m_eEquipType;
+
 	void SetOwningPawn(AUserCharacter *NewOwner);
 
 	void AttachToPlayer();
@@ -106,6 +110,9 @@ class PRACTICE02_API AWeapon : public AActor
 	void OnUnEquip();
 
 	void ReloadAmmo();
+
+	Equipment_Type GetEquipmentType();
+	void SetEquipmentType(Equipment_Type eType);
 
 	UAudioComponent* PlayWeaponSound(USoundCue *Sound);
 

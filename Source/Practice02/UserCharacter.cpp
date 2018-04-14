@@ -7,7 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
-
+#include "Blueprint/UserWidget.h"
 
 // Sets default values
 AUserCharacter::AUserCharacter(const FObjectInitializer& ObjectInitializer)
@@ -36,7 +36,7 @@ AUserCharacter::AUserCharacter(const FObjectInitializer& ObjectInitializer)
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
+	CameraBoom->TargetArmLength = 500.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 												// Create a follow camera
@@ -68,9 +68,8 @@ AUserCharacter::AUserCharacter(const FObjectInitializer& ObjectInitializer)
 	Inventory.SetNum(3, false);
 
 	CollisionComp = ObjectInitializer.CreateDefaultSubobject<UBoxComponent>(this, "CollisionComp");
-	CollisionComp->SetupAttachment(GetRootComponent());
+	CollisionComp->AttachTo(GetRootComponent());
 	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AUserCharacter::OnCollision);
-
 }
 
 
@@ -80,6 +79,20 @@ void AUserCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	GiveDefaultWeapon();
+
+	if (wHUD) // Check if the Asset is assigned in the blueprint.
+	{
+		// Create the widget and store it.
+		m_HUD = CreateWidget<UUserWidget>(Controller->CastToPlayerController(), wHUD);
+
+		// now you can use the widget directly since you have a referance for it.
+		// Extra check to  make sure the pointer holds the widget.
+		if (m_HUD)
+		{
+			//let add it to the view port
+			m_HUD->AddToViewport();
+		}
+	}
 }
 
 // Called every frame
@@ -255,53 +268,46 @@ void AUserCharacter::StopJumping()
 
 void AUserCharacter::SwitchTool()
 {
-	if (Inventory[CurrentWeapon->WeaponConfig.Priority]->WeaponConfig.Priority != 2)
+	if (CurrentWeapon)
 	{
-		if (Inventory[CurrentWeapon->WeaponConfig.Priority + 1] == NULL)
+		if (Inventory[CurrentWeapon->WeaponConfig.Priority]->WeaponConfig.Priority != 2)
 		{
-			for (int32 i = CurrentWeapon->WeaponConfig.Priority + 1; i < Inventory.Num(); i++)
+			if (Inventory[CurrentWeapon->WeaponConfig.Priority + 1] == NULL)
 			{
-				if (Inventory[i] && Inventory[i]->IsA(AWeapon::StaticClass()))
+				for (int32 i = CurrentWeapon->WeaponConfig.Priority + 1; i < Inventory.Num(); i++)
 				{
-					EquipWeapon(Inventory[i]);
+					if (Inventory[i] && Inventory[i]->IsA(AWeapon::StaticClass()))
+					{
+						EquipWeapon(Inventory[i]);
+					}
 				}
+			}
+			else
+			{
+				EquipWeapon(Inventory[CurrentWeapon->WeaponConfig.Priority + 1]);
 			}
 		}
 		else
 		{
-			EquipWeapon(Inventory[CurrentWeapon->WeaponConfig.Priority + 1]);
+			EquipWeapon(Inventory[CurrentWeapon->WeaponConfig.Priority]);
 		}
 	}
-	else
-	{
-		EquipWeapon(Inventory[CurrentWeapon->WeaponConfig.Priority]);
-	}
+	
+	//uint8 iType = (uint8)eEquipmentType;
+	//iType += 1;
+	//eEquipmentType = (Equipment_Type)iType;
+	//if (iType >= (uint8)Equipment_Type::Equip_Max)
+	//	eEquipmentType = Equipment_Type::Equip_None;
 
+	//if (iType == (uint8)Equipment_Type::Equip_Rifle || iType == (uint8)Equipment_Type::Equip_Pistol)
+	//	IsGun = true;
+	//else
+	//	IsGun = false;
 
-
-	uint8 iType = (uint8)eEquipmentType;
-	iType += 1;
-	eEquipmentType = (Equipment_Type)iType;
-	if (iType >= (uint8)Equipment_Type::Equip_Max)
-		eEquipmentType = Equipment_Type::Equip_None;
-
-	if (iType == (uint8)Equipment_Type::Equip_Rifle || iType == (uint8)Equipment_Type::Equip_Pistol)
-		IsGun = true;
-	else
-		IsGun = false;
-
-	if (iType == (uint8)Equipment_Type::Equip_Bow)
-		IsBow = true;
-	else
-		IsBow = false;
-
-
-	const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("Equipment_Type"), true);
-	if (EnumPtr)
-	{
-		FString text = (EnumPtr->GetNameByValue((int64)eEquipmentType)).ToString();
-		UE_LOG(LogTemp, Warning, TEXT("EquipTool is %s"), *text);
-	}
+	//if (iType == (uint8)Equipment_Type::Equip_Bow)
+	//	IsBow = true;
+	//else
+	//	IsBow = false;
 }
 
 void AUserCharacter::LeftMouseButtonPressed()

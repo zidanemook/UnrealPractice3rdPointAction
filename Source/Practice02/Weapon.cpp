@@ -13,8 +13,9 @@ AWeapon::AWeapon(const FObjectInitializer& ObjectInitializer)
 
 	WeaponMesh = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh"));
 	WeaponMesh->SetRelativeRotation(FRotator(0, 180, 0), false);
-	WeaponMesh->SetupAttachment(RootComponent);
-	
+	WeaponMesh->AttachTo(RootComponent);
+
+	m_eEquipType = Equipment_Type::Equip_None;
 }
 
 void AWeapon::Fire()
@@ -94,7 +95,7 @@ void AWeapon::AttachToPlayer()
 
 		USkeletalMeshComponent *Character = MyPawn->GetMesh();
 		WeaponMesh->SetHiddenInGame(false);
-		WeaponMesh->SetupAttachment(Character, "Weapon_Socket");
+		WeaponMesh->AttachTo(Character, "Hand_R_Socket");
 	}
 }
 
@@ -124,14 +125,40 @@ void AWeapon::ReloadAmmo()
 	}
 }
 
+Equipment_Type AWeapon::GetEquipmentType()
+{
+	return m_eEquipType;
+}
+
+void AWeapon::SetEquipmentType(Equipment_Type eType)
+{
+	m_eEquipType = eType;
+}
+
 void AWeapon::Instant_Fire()
 {
 		const int32 RandomSeed = FMath::Rand();
 		FRandomStream WeaponRandomStream(RandomSeed);
 		const float CurrentSpread = WeaponConfig.WeaponSpread;
 		const float SpreadCone = FMath::DegreesToRadians(WeaponConfig.WeaponSpread * 0.5);
-		const FVector AimDir = WeaponMesh->GetSocketRotation("MF").Vector();
-		const FVector StartTrace = WeaponMesh->GetSocketLocation("MF");
+		//const FVector AimDir = WeaponMesh->GetSocketRotation("Handle").Vector();
+		//const FVector AimDir = WeaponMesh->GetSocketTransform("Handle", RTS_World).GetRotation().GetUpVector();
+
+		const FVector StartTrace = WeaponMesh->GetSocketLocation("Handle");
+
+		//끝점위치벡터 = 총위치 + (카메라 방향 벡터 * 무기사거리)
+		//총의 발사 방향 벡터 = 정규화( 끝점위치 - 총위치벡터 )
+		FVector AimDir;
+		if (MyPawn)
+		{
+			const FVector CamLookAt = MyPawn->GetController()->CastToPlayerController()->PlayerCameraManager->GetCameraRotation().Vector();
+			const FVector EndPointOfWeaponRange = StartTrace + (CamLookAt * WeaponConfig.WeaponRange);
+			AimDir = (EndPointOfWeaponRange - StartTrace);
+			AimDir.Normalize();
+
+			DrawDebugLine(this->GetWorld(), StartTrace, EndPointOfWeaponRange, FColor::Black, true, 10000, 10.f);
+		}
+	
 		const FVector ShootDir = WeaponRandomStream.VRandCone(AimDir, SpreadCone, SpreadCone);
 		const FVector EndTrace = StartTrace + ShootDir * WeaponConfig.WeaponRange;
 		const FHitResult Impact = WeaponTrace(StartTrace, EndTrace);
