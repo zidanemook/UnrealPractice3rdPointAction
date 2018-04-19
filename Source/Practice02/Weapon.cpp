@@ -151,7 +151,9 @@ void AWeapon::Instant_Fire()
 		FVector AimDir;
 		if (MyPawn)
 		{
-			const FVector CamLookAt = MyPawn->GetController()->CastToPlayerController()->PlayerCameraManager->GetCameraRotation().Vector();
+			//const FVector CamLookAt = MyPawn->GetController()->CastToPlayerController()->PlayerCameraManager->GetCameraRotation().Vector();
+
+			const FVector CamLookAt = MyPawn->GetFollowCamera()->GetForwardVector();
 			const FVector EndPointOfWeaponRange = StartTrace + (CamLookAt * WeaponConfig.WeaponRange);
 			AimDir = (EndPointOfWeaponRange - StartTrace);
 			AimDir.Normalize();

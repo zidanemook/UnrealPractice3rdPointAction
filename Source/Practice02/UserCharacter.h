@@ -11,7 +11,8 @@
 #include "Pistol.h"
 #include "Shotgun.h"
 #include "RocketLauncher.h"
-
+#include "Interactable.h"
+#include "Pickup.h"
 
 #include "UserCharacter.generated.h"
 
@@ -85,11 +86,23 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory)
 		TArray<class AWeapon*> Inventory;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widgets)
-		TSubclassOf<UUserWidget> wHUD;
+	UPROPERTY(EditAnywhere, Category = "Stamina")
+		float m_fInitialStamina;
 
-	// Variable to hold the widget After Creating it.
-	UUserWidget* m_HUD;
+	UPROPERTY(EditAnywhere, Category = "Stamina")
+		float m_fStamina;
+
+	UPROPERTY(EditAnywhere, Category = "HealthPoint")
+		float m_fInitialHealthPoint;
+
+	UPROPERTY(EditAnywhere, Category = "HealthPoint")
+		float m_fHealthPoint;
+
+	float m_fReach;
+
+	FString m_HelpText;
+
+	AInteractable* m_CurrentInteractable;
 
 protected:
 	// Called when the game starts or when spawned
@@ -120,7 +133,11 @@ public:
 	*/
 	void LookUpAtRate(float Rate);
 
+	void ToggleInventory();
+
 	void Interact();
+
+	void CheckForInteractables();
 
 	void Jog();
 
@@ -156,7 +173,20 @@ public:
 	//void NumKeyEight();
 	//void NumKeyNine();
 
+	UFUNCTION(BlueprintPure, Category = "Camera")
+	UCameraComponent* GetFollowCamera();
 
+	UFUNCTION(BlueprintPure, Category = "Stamina")
+		float GetStamina();
+
+	UFUNCTION(BlueprintCallable, Category = "Stamina")
+		void UpdateStamina(float fStamina);
+
+	UFUNCTION(BlueprintPure, Category = "HealthPoint")
+		float GetHealthPoint();
+
+	UFUNCTION(BlueprintCallable, Category = "HealthPoint")
+		void UpdateHealthPoint(float fHealthPoint);
 
 	UFUNCTION()
 		void OnCollision(UPrimitiveComponent *OverlappedComp, AActor *OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult);

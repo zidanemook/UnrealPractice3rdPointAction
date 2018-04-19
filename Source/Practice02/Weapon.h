@@ -74,7 +74,7 @@ class PRACTICE02_API AWeapon : public AActor
 	UFUNCTION()
 	virtual void ProjectileFire();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Config)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Config)//BlueprintClass inheriting AWeapon sets this variable.
 	FWeaponData WeaponConfig;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)

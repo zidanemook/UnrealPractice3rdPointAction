@@ -17,4 +17,16 @@ class PRACTICE02_API APractice02GameModeBase : public AGameModeBase
 public:
 	APractice02GameModeBase();	
 	
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widgets)
+		TSubclassOf<UUserWidget> wHUD;
+
+	// Variable to hold the widget After Creating it.
+	UUserWidget* m_HUD;
+
+
+protected:
+	// Called when the game starts or when spawned
+	UFUNCTION(BlueprintCallable, Category = Event)
+		virtual void BeginPlay() override;
 };

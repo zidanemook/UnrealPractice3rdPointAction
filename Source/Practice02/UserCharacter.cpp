@@ -70,29 +70,41 @@ AUserCharacter::AUserCharacter(const FObjectInitializer& ObjectInitializer)
 	CollisionComp = ObjectInitializer.CreateDefaultSubobject<UBoxComponent>(this, "CollisionComp");
 	CollisionComp->AttachTo(GetRootComponent());
 	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AUserCharacter::OnCollision);
+
+	m_fInitialStamina = 100.f;
+	m_fStamina = m_fInitialStamina;
+
+	m_fInitialHealthPoint = 100.f;
+	m_fHealthPoint = m_fInitialHealthPoint;
+
+	m_fReach = 250.f;
 }
 
+float AUserCharacter::GetStamina()
+{
+	return m_fStamina;
+}
 
+void AUserCharacter::UpdateStamina(float fStamina)
+{
+	m_fStamina = m_fStamina + fStamina;
+}
+
+float AUserCharacter::GetHealthPoint()
+{
+	return m_fHealthPoint;
+}
+
+void AUserCharacter::UpdateHealthPoint(float fHealthPoint)
+{
+	m_fHealthPoint = m_fHealthPoint + fHealthPoint;
+}
 
 // Called when the game starts or when spawned
 void AUserCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	GiveDefaultWeapon();
-
-	if (wHUD) // Check if the Asset is assigned in the blueprint.
-	{
-		// Create the widget and store it.
-		m_HUD = CreateWidget<UUserWidget>(Controller->CastToPlayerController(), wHUD);
-
-		// now you can use the widget directly since you have a referance for it.
-		// Extra check to  make sure the pointer holds the widget.
-		if (m_HUD)
-		{
-			//let add it to the view port
-			m_HUD->AddToViewport();
-		}
-	}
 }
 
 // Called every frame
@@ -100,6 +112,9 @@ void AUserCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	UpdateHealthPoint(-DeltaTime * 0.01f*(m_fInitialHealthPoint));
+
+	CheckForInteractables();
 }
 
 // Called to bind functionality to input
@@ -111,6 +126,7 @@ void AUserCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	check(PlayerInputComponent);
 
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AUserCharacter::Interact);
+	PlayerInputComponent->BindAction("ToggleInventory", IE_Pressed, this, &AUserCharacter::ToggleInventory);
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AUserCharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AUserCharacter::StopJumping);
@@ -200,8 +216,40 @@ void AUserCharacter::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
+void AUserCharacter::ToggleInventory()
+{
+
+}
+
 void AUserCharacter::Interact()
 {
+}
+
+void AUserCharacter::CheckForInteractables()
+{
+	FVector StartTrace = FollowCamera->GetComponentLocation();
+	FVector EndTrace = (FollowCamera->GetForwardVector() * m_fReach) + StartTrace;
+
+	FHitResult HitResult;
+
+	FCollisionQueryParams CQP;
+	CQP.AddIgnoredActor(this);
+
+	GetWorld()->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECC_WorldDynamic, CQP);
+
+	AInteractable* PotentialInteractable = Cast<AInteractable>(HitResult.GetActor());
+
+	if (PotentialInteractable == NULL)
+	{
+		m_HelpText = FString("");
+		m_CurrentInteractable = nullptr;
+		return;
+	}
+	else
+	{
+		m_CurrentInteractable = PotentialInteractable;
+		m_HelpText = PotentialInteractable->InteractableHelpText;
+	}
 }
 
 void AUserCharacter::Jog()
@@ -351,13 +399,22 @@ void AUserCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Locatio
 	}
 }
 
+UCameraComponent* AUserCharacter::GetFollowCamera()
+{
+	UCameraComponent* pCamera = NULL;
+	if (FollowCamera)
+		pCamera = FollowCamera;
+
+	return pCamera;
+}
+
 void AUserCharacter::OnCollision(UPrimitiveComponent *OverlappedComp, AActor *OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	AWeapon *Weapon = Cast<AWeapon>(OtherActor);
+	/*AWeapon *Weapon = Cast<AWeapon>(OtherActor);
 	if (Weapon)
 	{
 		ProcessWeaponPickup(Weapon);
-	}
+	}*/
 }
 
 void AUserCharacter::ProcessWeaponPickup(AWeapon *Weapon)
