@@ -173,7 +173,7 @@ FHitResult AWeapon::WeaponTrace(const FVector &TraceFrom, const FVector &TraceTo
 	static FName WeaponFireTag = FName(TEXT("WeaponTrace"));
 
 	FCollisionQueryParams TraceParams(WeaponFireTag, true, Instigator);
-	TraceParams.bTraceAsyncScene = true;
+	//TraceParams.bTraceAsyncScene = true;
 	TraceParams.bReturnPhysicalMaterial = true;
 	TraceParams.AddIgnoredActor(this);
 
@@ -203,14 +203,12 @@ void AWeapon::ProjectileFire()
 
 }
 
-UAudioComponent* AWeapon::PlayWeaponSound(USoundCue *Sound)
+void AWeapon::PlayWeaponSound(USoundCue *Sound)
 {
 	UAudioComponent* AC = NULL;
 	if (Sound && MyPawn)
 	{
-		AC = UGameplayStatics::PlaySoundAttached(Sound, MyPawn->GetRootComponent());
+		UGameplayStatics::PlaySound2D(MyPawn->GetRootComponent() ,Sound );
 	}
-
-	return AC;
 }
 

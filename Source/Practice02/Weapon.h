@@ -114,7 +114,7 @@ class PRACTICE02_API AWeapon : public AActor
 	Equipment_Type GetEquipmentType();
 	void SetEquipmentType(Equipment_Type eType);
 
-	UAudioComponent* PlayWeaponSound(USoundCue *Sound);
+	void PlayWeaponSound(USoundCue *Sound);
 
 protected:
 
